@@ -1,0 +1,131 @@
+{
+  "Description": "Test task environment",
+  "Parameters": {
+    "VpcCIDR": {
+      "Description":"CIDR block associated with VPC",
+      "Type": "String",
+      "Default": "172.16.0.0/16"
+    },
+    "TestAvailabilityZone": {
+      "Description": "Availability zone used to deploy resources",
+      "Type": "String",
+      "Default": "eu-central-1a"
+    }
+  },
+  "Resources": {
+    "TestVPC": {
+      "Description": "Test VPC",
+      "Type": "AWS::EC2::VPC",
+      "Properties": {
+        "CidrBlock": { "Ref": "VpcCIDR" }
+      }
+    },
+    "PublicSubnet": {
+      "Description": "Subnet accessible from the world",
+      "Type": "AWS::EC2::Subnet",
+      "Properties": {
+        "AvailabilityZone": { "Ref": "TestAvailabilityZone" },
+        "CidrBlock": "172.16.1.0/24",
+        "MapPublicIpOnLaunch": true,
+        "VpcId": { "Ref": "TestVPC" },
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "PublicSubnet"
+          }
+        ]
+      }
+    },
+    "PrivateSubnet": {
+      "Description": "Subnet not accessible from the world",
+      "Type": "AWS::EC2::Subnet",
+      "Properties": {
+        "AvailabilityZone": { "Ref": "TestAvailabilityZone" },
+        "CidrBlock": "172.16.2.0/24",
+        "MapPublicIpOnLaunch": false,
+        "VpcId": { "Ref": "TestVPC" },
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "PrivateSubnet"
+          }
+        ]
+      }
+    },
+    "InetGW": {
+      "Description": "Internet gateway",
+      "Type": "AWS::EC2::InternetGateway",
+      "Properties": {}
+    },
+    "TestInetGWAttachment": {
+      "Description": "Internet gateway to VPC attachment",
+      "Type": "AWS::EC2::VPCGatewayAttachment",
+      "Properties": {
+        "InternetGatewayId": { "Ref": "InetGW" },
+        "VpcId": { "Ref": "TestVPC" }
+      }
+    },
+    "PublicSubnetRouteTable": {
+      "Description": "Route table for the public subnet",
+      "Type": "AWS::EC2::RouteTable",
+      "Properties": {
+        "VpcId": { "Ref": "TestVPC" }
+      }
+    },
+    "PublicSubnetDefaultRoute": {
+      "Description": "Default route for the public subnet",
+      "Type": "AWS::EC2::Route",
+      "Properties": {
+        "DestinationCidrBlock": "0.0.0.0/0",
+        "GatewayId": { "Ref": "InetGW" },
+        "RouteTableId": { "Ref": "PublicSubnetRouteTable" }
+      }
+    },
+    "PublicSubnetRouteTableAssociation": {
+      "Description": "Association of route table with public subnet",
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties": {
+        "RouteTableId": { "Ref": "PublicSubnetRouteTable" },
+        "SubnetId": { "Ref": "PublicSubnet" }
+      }
+    },
+    "PublicSubnetSecurityGroup": {
+      "Description": "Security group for access to the public subnet",
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "GroupDescription": "Access to the public subnet",
+        "GroupName": "PublicAccess",
+        "VpcId": { "Ref": "TestVPC" },
+        "SecurityGroupEgress": [
+          {
+            "CidrIp": "0.0.0.0/0",
+            "IpProtocol": "-1"
+          }
+        ],
+        "SecurityGroupIngress": [
+          {
+            "Description": "SSH",
+            "CidrIp": "0.0.0.0/0",
+            "IpProtocol": "tcp",
+            "FromPort": "22",
+            "ToPort": "22"
+          },
+          {
+            "Description": "HTTP",
+            "CidrIp": "0.0.0.0/0",
+            "IpProtocol": "tcp",
+            "FromPort": "80",
+            "ToPort": "80"
+          },
+          {
+            "Description": "HTTPS",
+            "CidrIp": "0.0.0.0/0",
+            "IpProtocol": "tcp",
+            "FromPort": "443",
+            "ToPort": "443"
+          }
+        ]
+      }
+    }
+  }
+}

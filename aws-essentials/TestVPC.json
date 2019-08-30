@@ -1,0 +1,19 @@
+{
+  "Description": "Test VPC",
+  "Parameters": {
+    "VpcCIDR": {
+      "Description":"CIDR block associated with VPC",
+      "Type": "String",
+      "Default": "172.16.0.0/16"
+    },
+  },
+  "Resources": {
+    "TestVPC": {
+      "Description": "Test VPC",
+      "Type": "AWS::EC2::VPC",
+      "Properties": {
+        "CidrBlock": { "Ref": "VpcCIDR" }
+      }
+    },
+  }
+}
