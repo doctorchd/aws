@@ -126,6 +126,50 @@
           }
         ]
       }
+    },
+    "PublicInstance1": {
+      "Description": "Public instance 1",
+      "Type": "AWS::EC2::Instance",
+      "Properties": {
+        "AvailabilityZone": { "Ref": "TestAvailabilityZone" },
+        "ImageId": "ami-0cc293023f983ed53",
+        "InstanceType": "t2.micro",
+        "KeyName": "Key-20190726",
+        "NetworkInterfaces": [
+          {
+            "AssociatePublicIpAddress": "true",
+            "DeviceIndex": "0",
+            "GroupSet": [
+              { "Ref": "PublicSubnetSecurityGroup" }
+            ],
+            "SubnetId": {
+              "Ref": "PublicSubnet"
+            }
+          }
+        ]
+      }
+    },
+    "PublicInstance2": {
+      "Description": "Public instance 2",
+      "Type": "AWS::EC2::Instance",
+      "Properties": {
+        "AvailabilityZone": { "Ref": "TestAvailabilityZone" },
+        "ImageId": "ami-0cc293023f983ed53",
+        "InstanceType": "t2.micro",
+        "KeyName": "Key-20190726",
+        "NetworkInterfaces": [
+          {
+            "AssociatePublicIpAddress": "true",
+            "DeviceIndex": "0",
+            "GroupSet": [
+              { "Ref": "PublicSubnetSecurityGroup" }
+            ],
+            "SubnetId": {
+              "Ref": "PublicSubnet"
+            }
+          }
+        ]
+      }
     }
   }
 }
