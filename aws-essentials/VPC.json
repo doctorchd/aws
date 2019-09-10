@@ -170,6 +170,56 @@
           }
         ]
       }
+    },
+    "PrivateInstance": {
+      "Description": "Private instance",
+      "Type": "AWS::EC2::Instance",
+      "Properties": {
+        "AvailabilityZone": { "Ref": "TestAvailabilityZone" },
+        "ImageId": "ami-0cc293023f983ed53",
+        "InstanceType": "t2.micro",
+        "KeyName": "Key-20190726",
+        "SubnetId": { "Ref": "PublicSubnet" }
+      }
+    },
+    "NATGWPublicIPAddress": {
+      "Description": "Public IP address on NAT gateway",
+      "Type": "AWS::EC2::EIP",
+      "Properties": {
+        "Domain": "vpc"
+      }
+    },
+    "NATGW": {
+      "Description": "NAT gateway for the instances in the private network",
+      "Type": "AWS::EC2::NatGateway",
+      "Properties": {
+        "AllocationId": { "Ref": "NATGWPublicIPAddress" },
+        "SubnetId": { "Ref": "PrivateSubnet" }
+      }
+    },
+    "PrivateSubnetRouteTable": {
+      "Description": "Route table for the private subnet",
+      "Type": "AWS::EC2::RouteTable",
+      "Properties": {
+        "VpcId": { "Ref": "TestVPC" }
+      }
+    },
+    "PrivateSubnetDefaultRoute": {
+      "Description": "Default route for the private subnet",
+      "Type": "AWS::EC2::Route",
+      "Properties": {
+        "DestinationCidrBlock": "0.0.0.0/0",
+        "GatewayId": { "Ref": "NATGW" },
+        "RouteTableId": { "Ref": "PrivateSubnetRouteTable" }
+      }
+    },
+    "PrivateSubnetRouteTableAssociation": {
+      "Description": "Association of route table with private subnet",
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties": {
+        "RouteTableId": { "Ref": "PrivateSubnetRouteTable" },
+        "SubnetId": { "Ref": "PrivateSubnet" }
+      }
     }
   }
 }
