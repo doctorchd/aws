@@ -193,8 +193,10 @@
       "Description": "NAT gateway for the instances in the private network",
       "Type": "AWS::EC2::NatGateway",
       "Properties": {
-        "AllocationId": { "Ref": "NATGWPublicIPAddress" },
-        "SubnetId": { "Ref": "PrivateSubnet" }
+        "AllocationId": {
+          "Fn::GetAtt": [ "NATGWPublicIPAddress", "AllocationId" ]
+        },
+        "SubnetId": { "Ref": "PublicSubnet" }
       }
     },
     "PrivateSubnetRouteTable": {
@@ -209,7 +211,7 @@
       "Type": "AWS::EC2::Route",
       "Properties": {
         "DestinationCidrBlock": "0.0.0.0/0",
-        "GatewayId": { "Ref": "NATGW" },
+        "NatGatewayId": { "Ref": "NATGW" },
         "RouteTableId": { "Ref": "PrivateSubnetRouteTable" }
       }
     },
