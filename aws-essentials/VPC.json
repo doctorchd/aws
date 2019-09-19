@@ -179,7 +179,7 @@
         "ImageId": "ami-0cc293023f983ed53",
         "InstanceType": "t2.micro",
         "KeyName": "Key-20190726",
-        "SubnetId": { "Ref": "PublicSubnet" }
+        "SubnetId": { "Ref": "PrivateSubnet" }
       }
     },
     "NATGWPublicIPAddress": {
