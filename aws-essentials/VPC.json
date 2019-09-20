@@ -269,23 +269,6 @@
         "SourceDestCheck": "false"
       }
     },
-    "NATGWPublicIPAddress": {
-      "Description": "Public IP address on NAT gateway",
-      "Type": "AWS::EC2::EIP",
-      "Properties": {
-        "Domain": "vpc"
-      }
-    },
-    "NATGW": {
-      "Description": "NAT gateway for the instances in the private network",
-      "Type": "AWS::EC2::NatGateway",
-      "Properties": {
-        "AllocationId": {
-          "Fn::GetAtt": [ "NATGWPublicIPAddress", "AllocationId" ]
-        },
-        "SubnetId": { "Ref": "PublicSubnet" }
-      }
-    },
     "PrivateSubnetRouteTable": {
       "Description": "Route table for the private subnet",
       "Type": "AWS::EC2::RouteTable",
@@ -298,7 +281,7 @@
       "Type": "AWS::EC2::Route",
       "Properties": {
         "DestinationCidrBlock": "0.0.0.0/0",
-        "NatGatewayId": { "Ref": "NATGW" },
+        "InstanceId": { "Ref": "NATInstance" },
         "RouteTableId": { "Ref": "PrivateSubnetRouteTable" }
       }
     },
@@ -308,6 +291,52 @@
       "Properties": {
         "RouteTableId": { "Ref": "PrivateSubnetRouteTable" },
         "SubnetId": { "Ref": "PrivateSubnet" }
+      }
+    },
+    "PeopleNoSqlDb": {
+      "Description": "NoSQL database with people data",
+      "Type": "AWS::DynamoDB::Table",
+      "Properties": {
+        "AttributeDefinitions": [
+          {
+            "AttributeName": "PersonId",
+            "AttributeType": "S"
+          },
+          {
+            "AttributeName": "Name",
+            "AttributeType": "S"
+          },
+          {
+            "AttributeName": "Phone",
+            "AttributeType": "S"
+          }
+        ],
+        "KeySchema" : [
+          {
+            "AttributeName" : "PersonId",
+            "KeyType" : "HASH"
+          }
+        ],
+        "GlobalSecondaryIndexes": [
+          {
+            "IndexName": "GSI",
+            "KeySchema": [
+              {
+                "AttributeName" : "Name",
+                "KeyType" : "HASH"
+              },
+              {
+                "AttributeName" : "Phone",
+                "KeyType" : "RANGE"
+              }
+            ],
+            "Projection": {
+              "NonKeyAttributes": [ "PersonId" ],
+              "ProjectionType": "INCLUDE"
+            }
+          }
+        ],
+        "BillingMode": "PAY_PER_REQUEST"
       }
     }
   }
