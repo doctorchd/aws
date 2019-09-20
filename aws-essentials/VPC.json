@@ -127,6 +127,59 @@
         ]
       }
     },
+    "NatAccessSecurityGroup": {
+      "Description": "Security group for access via NAT instance",
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "GroupDescription": "SSH access to NAT gateway",
+        "GroupName": "SshAccess",
+        "VpcId": { "Ref": "TestVPC" },
+        "SecurityGroupEgress": [
+          {
+            "CidrIp": "0.0.0.0/0",
+            "IpProtocol": "-1"
+          }
+        ],
+        "SecurityGroupIngress": [
+          {
+            "Description": "SSH",
+            "CidrIp": "0.0.0.0/0",
+            "IpProtocol": "tcp",
+            "FromPort": "22",
+            "ToPort": "22"
+          },
+          {
+            "Description": "SSH 4322",
+            "CidrIp": "0.0.0.0/0",
+            "IpProtocol": "tcp",
+            "FromPort": "4322",
+            "ToPort": "4322"
+          }
+        ]
+      }
+    },
+    "PrivateInstanceSecurityGroup": {
+      "Description": "Access to private instance",
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "GroupDescription": "Access to private instance",
+        "GroupName": "PrivateAccess",
+        "VpcId": { "Ref": "TestVPC" },
+        "SecurityGroupEgress": [
+          {
+            "CidrIp": "0.0.0.0/0",
+            "IpProtocol": "-1"
+          }
+        ],
+        "SecurityGroupIngress": [
+          {
+            "Description": "Open access",
+            "CidrIp": "0.0.0.0/0",
+            "IpProtocol": "-1"
+          }
+        ]
+      }
+    },
     "PublicInstance1": {
       "Description": "Public instance 1",
       "Type": "AWS::EC2::Instance",
@@ -164,9 +217,7 @@
             "GroupSet": [
               { "Ref": "PublicSubnetSecurityGroup" }
             ],
-            "SubnetId": {
-              "Ref": "PublicSubnet"
-            }
+            "SubnetId": { "Ref": "PublicSubnet" }
           }
         ]
       }
@@ -179,7 +230,43 @@
         "ImageId": "ami-0cc293023f983ed53",
         "InstanceType": "t2.micro",
         "KeyName": "Key-20190726",
-        "SubnetId": { "Ref": "PrivateSubnet" }
+        "NetworkInterfaces": [
+          {
+            "AssociatePublicIpAddress": "false",
+            "DeviceIndex": "0",
+            "GroupSet": [
+              { "Ref": "PrivateInstanceSecurityGroup" }
+            ],
+            "SubnetId": { "Ref": "PrivateSubnet" }
+          }
+        ]
+      }
+    },
+    "NATInstance": {
+      "Description": "NAT instance acting as a bastion host",
+      "Type": "AWS::EC2::Instance",
+      "Properties": {
+        "AvailabilityZone": {
+          "Ref": "TestAvailabilityZone"
+        },
+        "ImageId": "ami-001b36cbc16911c13",
+        "InstanceType": "t2.micro",
+        "KeyName": "Key-20190726",
+        "NetworkInterfaces": [
+          {
+            "AssociatePublicIpAddress": "true",
+            "DeviceIndex": "0",
+            "GroupSet": [
+              {
+                "Ref": "NatAccessSecurityGroup"
+              }
+            ],
+            "SubnetId": {
+              "Ref": "PublicSubnet"
+            }
+          }
+        ],
+        "SourceDestCheck": "false"
       }
     },
     "NATGWPublicIPAddress": {
