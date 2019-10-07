@@ -293,50 +293,44 @@
         "SubnetId": { "Ref": "PrivateSubnet" }
       }
     },
-    "PeopleNoSqlDb": {
-      "Description": "NoSQL database with people data",
+    "LohikaNoSqlDb": {
+      "Description": "NoSQL database with data",
       "Type": "AWS::DynamoDB::Table",
       "Properties": {
+        "TableName": "edu-lohika-training-aws-dynamodb",
         "AttributeDefinitions": [
           {
-            "AttributeName": "PersonId",
-            "AttributeType": "S"
-          },
-          {
-            "AttributeName": "Name",
-            "AttributeType": "S"
-          },
-          {
-            "AttributeName": "Phone",
+            "AttributeName": "UserName",
             "AttributeType": "S"
           }
         ],
         "KeySchema" : [
           {
-            "AttributeName" : "PersonId",
+            "AttributeName" : "UserName",
             "KeyType" : "HASH"
           }
         ],
-        "GlobalSecondaryIndexes": [
-          {
-            "IndexName": "GSI",
-            "KeySchema": [
-              {
-                "AttributeName" : "Name",
-                "KeyType" : "HASH"
-              },
-              {
-                "AttributeName" : "Phone",
-                "KeyType" : "RANGE"
-              }
-            ],
-            "Projection": {
-              "NonKeyAttributes": [ "PersonId" ],
-              "ProjectionType": "INCLUDE"
-            }
-          }
-        ],
         "BillingMode": "PAY_PER_REQUEST"
+      }
+    },
+    "LohikaSNSTopic": {
+      "Type": "AWS::SNS::Topic",
+      "Properties": {
+        "TopicName": "edu-lohika-training-aws-sns-topic"
+      }
+    },
+    "LohikaSNSSubscription": {
+      "Type": "AWS::SNS::Subscription",
+      "Properties": {
+        "TopicArn": { "Ref": "LohikaSNSTopic" },
+        "Protocol": "email",
+        "Endpoint": "doctorchd@gmail.com"
+      }
+    },
+    "LohikaSQSQueue": {
+      "Type": "AWS::SQS::Queue",
+      "Properties": {
+        "QueueName": "edu-lohika-training-aws-sqs-queue"
       }
     }
   }
