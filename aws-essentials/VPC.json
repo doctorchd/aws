@@ -332,6 +332,12 @@
       "Properties": {
         "QueueName": "edu-lohika-training-aws-sqs-queue"
       }
+    },
+    "LohikaS3Bucket": {
+      "Type": "AWS::S3::Bucket",
+      "Properties": {
+        "BucketName": "lohika-s3-bucket"
+      }
     }
   }
 }
