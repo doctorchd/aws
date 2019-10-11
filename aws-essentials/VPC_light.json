@@ -1,0 +1,371 @@
+{
+  "Description": "Test task environment",
+  "Parameters": {
+    "VpcCIDR": {
+      "Description":"CIDR block associated with VPC",
+      "Type": "String",
+      "Default": "172.16.0.0/16"
+    },
+    "TestAvailabilityZone": {
+      "Description": "Availability zone used to deploy resources",
+      "Type": "String",
+      "Default": "eu-central-1a"
+    },
+    "TestAvailabilityZone2": {
+      "Description": "Availability zone used to deploy resources",
+      "Type": "String",
+      "Default": "eu-central-1b"
+    }
+  },
+  "Resources": {
+    "TestVPC": {
+      "Description": "Test VPC",
+      "Type": "AWS::EC2::VPC",
+      "Properties": {
+        "CidrBlock": { "Ref": "VpcCIDR" }
+      }
+    },
+    "PublicSubnet": {
+      "Description": "Subnet accessible from the world",
+      "Type": "AWS::EC2::Subnet",
+      "Properties": {
+        "AvailabilityZone": { "Ref": "TestAvailabilityZone" },
+        "CidrBlock": "172.16.1.0/24",
+        "MapPublicIpOnLaunch": true,
+        "VpcId": { "Ref": "TestVPC" },
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "PublicSubnet"
+          }
+        ]
+      }
+    },
+    "PrivateSubnet": {
+      "Description": "Subnet not accessible from the world",
+      "Type": "AWS::EC2::Subnet",
+      "Properties": {
+        "AvailabilityZone": { "Ref": "TestAvailabilityZone" },
+        "CidrBlock": "172.16.2.0/24",
+        "MapPublicIpOnLaunch": false,
+        "VpcId": { "Ref": "TestVPC" },
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "PrivateSubnet"
+          }
+        ]
+      }
+    },
+    "InetGW": {
+      "Description": "Internet gateway",
+      "Type": "AWS::EC2::InternetGateway",
+      "Properties": {}
+    },
+    "TestInetGWAttachment": {
+      "Description": "Internet gateway to VPC attachment",
+      "Type": "AWS::EC2::VPCGatewayAttachment",
+      "Properties": {
+        "InternetGatewayId": { "Ref": "InetGW" },
+        "VpcId": { "Ref": "TestVPC" }
+      }
+    },
+    "PublicSubnetRouteTable": {
+      "Description": "Route table for the public subnet",
+      "Type": "AWS::EC2::RouteTable",
+      "Properties": {
+        "VpcId": { "Ref": "TestVPC" }
+      }
+    },
+    "PublicSubnetDefaultRoute": {
+      "Description": "Default route for the public subnet",
+      "Type": "AWS::EC2::Route",
+      "Properties": {
+        "DestinationCidrBlock": "0.0.0.0/0",
+        "GatewayId": { "Ref": "InetGW" },
+        "RouteTableId": { "Ref": "PublicSubnetRouteTable" }
+      }
+    },
+    "PublicSubnetRouteTableAssociation": {
+      "Description": "Association of route table with public subnet",
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties": {
+        "RouteTableId": { "Ref": "PublicSubnetRouteTable" },
+        "SubnetId": { "Ref": "PublicSubnet" }
+      }
+    },
+    "PublicSubnetSecurityGroup": {
+      "Description": "Security group for access to the public subnet",
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "GroupDescription": "Access to the public subnet",
+        "GroupName": "PublicAccess",
+        "VpcId": { "Ref": "TestVPC" },
+        "SecurityGroupEgress": [
+          {
+            "CidrIp": "0.0.0.0/0",
+            "IpProtocol": "-1"
+          }
+        ],
+        "SecurityGroupIngress": [
+          {
+            "Description": "SSH",
+            "CidrIp": "0.0.0.0/0",
+            "IpProtocol": "tcp",
+            "FromPort": "22",
+            "ToPort": "22"
+          },
+          {
+            "Description": "HTTP",
+            "CidrIp": "0.0.0.0/0",
+            "IpProtocol": "tcp",
+            "FromPort": "80",
+            "ToPort": "80"
+          },
+          {
+            "Description": "HTTPS",
+            "CidrIp": "0.0.0.0/0",
+            "IpProtocol": "tcp",
+            "FromPort": "443",
+            "ToPort": "443"
+          }
+        ]
+      }
+    },
+    "NatAccessSecurityGroup": {
+      "Description": "Security group for access via NAT instance",
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "GroupDescription": "SSH access to NAT gateway",
+        "GroupName": "SshAccess",
+        "VpcId": { "Ref": "TestVPC" },
+        "SecurityGroupEgress": [
+          {
+            "CidrIp": "0.0.0.0/0",
+            "IpProtocol": "-1"
+          }
+        ],
+        "SecurityGroupIngress": [
+          {
+            "Description": "SSH",
+            "CidrIp": "0.0.0.0/0",
+            "IpProtocol": "tcp",
+            "FromPort": "22",
+            "ToPort": "22"
+          },
+          {
+            "Description": "SSH 4322",
+            "CidrIp": "0.0.0.0/0",
+            "IpProtocol": "tcp",
+            "FromPort": "4322",
+            "ToPort": "4322"
+          }
+        ]
+      }
+    },
+    "PrivateInstanceSecurityGroup": {
+      "Description": "Access to private instance",
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "GroupDescription": "Access to private instance",
+        "GroupName": "PrivateAccess",
+        "VpcId": { "Ref": "TestVPC" },
+        "SecurityGroupEgress": [
+          {
+            "CidrIp": "0.0.0.0/0",
+            "IpProtocol": "-1"
+          }
+        ],
+        "SecurityGroupIngress": [
+          {
+            "Description": "Open access",
+            "CidrIp": "0.0.0.0/0",
+            "IpProtocol": "-1"
+          }
+        ]
+      }
+    },
+    "PublicInstance1": {
+      "Description": "Public instance 1",
+      "Type": "AWS::EC2::Instance",
+      "Properties": {
+        "AvailabilityZone": { "Ref": "TestAvailabilityZone" },
+        "ImageId": "ami-0cc293023f983ed53",
+        "InstanceType": "t2.micro",
+        "KeyName": "Key-20190726",
+        "NetworkInterfaces": [
+          {
+            "AssociatePublicIpAddress": "true",
+            "DeviceIndex": "0",
+            "GroupSet": [
+              { "Ref": "PublicSubnetSecurityGroup" }
+            ],
+            "SubnetId": {
+              "Ref": "PublicSubnet"
+            }
+          }
+        ],
+        "UserData": {
+          "Fn::Base64": {
+            "Fn::Join": [
+              "",
+              [
+                "#!/bin/bash -xe\n",
+                "yum -y install httpd\n",
+                "systemctl start httpd\n"
+              ]
+            ]
+          }
+        }
+      }
+    },
+    "PublicInstance2": {
+      "Description": "Public instance 2",
+      "Type": "AWS::EC2::Instance",
+      "Properties": {
+        "AvailabilityZone": { "Ref": "TestAvailabilityZone" },
+        "ImageId": "ami-0cc293023f983ed53",
+        "InstanceType": "t2.micro",
+        "KeyName": "Key-20190726",
+        "NetworkInterfaces": [
+          {
+            "AssociatePublicIpAddress": "true",
+            "DeviceIndex": "0",
+            "GroupSet": [
+              { "Ref": "PublicSubnetSecurityGroup" }
+            ],
+            "SubnetId": { "Ref": "PublicSubnet" }
+          }
+        ],
+        "UserData": {
+          "Fn::Base64": {
+            "Fn::Join": [
+              "",
+              [
+                "#!/bin/bash -xe\n",
+                "yum -y install httpd\n",
+                "systemctl start httpd\n"
+              ]
+            ]
+          }
+        }
+      }
+    },
+    "PrivateInstance": {
+      "Description": "Private instance",
+      "Type": "AWS::EC2::Instance",
+      "Properties": {
+        "AvailabilityZone": { "Ref": "TestAvailabilityZone" },
+        "ImageId": "ami-0cc293023f983ed53",
+        "InstanceType": "t2.micro",
+        "KeyName": "Key-20190726",
+        "NetworkInterfaces": [
+          {
+            "AssociatePublicIpAddress": "false",
+            "DeviceIndex": "0",
+            "GroupSet": [
+              { "Ref": "PrivateInstanceSecurityGroup" }
+            ],
+            "SubnetId": { "Ref": "PrivateSubnet" }
+          }
+        ]
+      }
+    },
+    "NATInstance": {
+      "Description": "NAT instance acting as a bastion host",
+      "Type": "AWS::EC2::Instance",
+      "Metadata": {
+        "Test_data": "This is my meta data"
+      },
+      "Properties": {
+        "AvailabilityZone": {
+          "Ref": "TestAvailabilityZone"
+        },
+        "ImageId": "ami-001b36cbc16911c13",
+        "InstanceType": "t2.micro",
+        "KeyName": "Key-20190726",
+        "NetworkInterfaces": [
+          {
+            "AssociatePublicIpAddress": "true",
+            "DeviceIndex": "0",
+            "GroupSet": [
+              {
+                "Ref": "NatAccessSecurityGroup"
+              }
+            ],
+            "SubnetId": {
+              "Ref": "PublicSubnet"
+            }
+          }
+        ],
+        "SourceDestCheck": "false",
+        "UserData": {
+          "Fn::Base64": {
+            "Fn::Join": [
+              "",
+              [
+                "#!/bin/bash -xe\n",
+                "touch /test_file\n"
+              ]
+            ]
+          }
+        }
+      }
+    },
+    "PrivateSubnetRouteTable": {
+      "Description": "Route table for the private subnet",
+      "Type": "AWS::EC2::RouteTable",
+      "Properties": {
+        "VpcId": { "Ref": "TestVPC" }
+      }
+    },
+    "PrivateSubnetDefaultRoute": {
+      "Description": "Default route for the private subnet",
+      "Type": "AWS::EC2::Route",
+      "Properties": {
+        "DestinationCidrBlock": "0.0.0.0/0",
+        "InstanceId": { "Ref": "NATInstance" },
+        "RouteTableId": { "Ref": "PrivateSubnetRouteTable" }
+      }
+    },
+    "PrivateSubnetRouteTableAssociation": {
+      "Description": "Association of route table with private subnet",
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties": {
+        "RouteTableId": { "Ref": "PrivateSubnetRouteTable" },
+        "SubnetId": { "Ref": "PrivateSubnet" }
+      }
+    },
+    "LohikaLoadBalancer": {
+      "Description": "Test HTTP load balancer",
+      "Type": "AWS::ElasticLoadBalancing::LoadBalancer",
+      "Properties": {
+        "HealthCheck": {
+          "HealthyThreshold": "2",
+          "Interval": "5",
+          "Target": "TCP:80",
+          "Timeout": "3",
+          "UnhealthyThreshold": "10"
+        },
+        "Instances": [
+          { "Ref": "PublicInstance1" },
+          { "Ref": "PublicInstance2" }
+        ],
+        "Listeners": [
+          {
+            "InstancePort": "80",
+            "LoadBalancerPort": "80",
+            "Protocol": "HTTP"
+          }
+        ],
+        "Scheme": "internet-facing",
+        "SecurityGroups": [
+          { "Ref": "PublicSubnetSecurityGroup" }
+        ],
+        "Subnets": [
+          { "Ref": "PublicSubnet" }
+        ]
+      }
+    }
+  }
+}
