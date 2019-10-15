@@ -18,6 +18,48 @@
     }
   },
   "Resources": {
+    "AdminRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": "*",
+              "Action": [
+                "sts:AssumeRole"
+              ]
+            }
+          ]
+        },
+        "Path": "/",
+        "Policies": [
+          {
+            "PolicyName": "AdminPolicy",
+            "PolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Action": "*",
+                  "Resource": "*"
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    "AdminInstanceProfile": {
+      "Type": "AWS::IAM::InstanceProfile",
+      "Properties": {
+        "Path": "/",
+        "Roles": [ {
+          "Ref": "AdminRole"
+        } ]
+      }
+    },
     "TestVPC": {
       "Description": "Test VPC",
       "Type": "AWS::EC2::VPC",
@@ -190,6 +232,7 @@
       "Type": "AWS::EC2::Instance",
       "Properties": {
         "AvailabilityZone": { "Ref": "TestAvailabilityZone" },
+        "IamInstanceProfile": { "Ref": "AdminInstanceProfile" },
         "ImageId": "ami-0cc293023f983ed53",
         "InstanceType": "t2.micro",
         "KeyName": "Key-20190726",
@@ -212,6 +255,7 @@
       "Type": "AWS::EC2::Instance",
       "Properties": {
         "AvailabilityZone": { "Ref": "TestAvailabilityZone" },
+        "IamInstanceProfile": { "Ref": "AdminInstanceProfile" },
         "ImageId": "ami-0cc293023f983ed53",
         "InstanceType": "t2.micro",
         "KeyName": "Key-20190726",
@@ -232,6 +276,7 @@
       "Type": "AWS::EC2::Instance",
       "Properties": {
         "AvailabilityZone": { "Ref": "TestAvailabilityZone" },
+        "IamInstanceProfile": { "Ref": "AdminInstanceProfile" },
         "ImageId": "ami-0cc293023f983ed53",
         "InstanceType": "t2.micro",
         "KeyName": "Key-20190726",
@@ -342,7 +387,8 @@
       "Type": "AWS::S3::Bucket",
       "Properties": {
         "BucketName": "lohika-s3-bucket"
-      }
+      },
+      "DeletionPolicy": "Delete"
     },
     "RDSSubnet1": {
       "Type": "AWS::EC2::Subnet",
