@@ -26,29 +26,13 @@
           "Statement": [
             {
               "Effect": "Allow",
-              "Principal": "*",
-              "Action": [
-                "sts:AssumeRole"
-              ]
+              "Principal": { "Service": [ "ec2.amazonaws.com" ] },
+              "Action": [ "sts:AssumeRole"  ]
             }
           ]
         },
         "Path": "/",
-        "Policies": [
-          {
-            "PolicyName": "AdminPolicy",
-            "PolicyDocument": {
-              "Version": "2012-10-17",
-              "Statement": [
-                {
-                  "Effect": "Allow",
-                  "Action": "*",
-                  "Resource": "*"
-                }
-              ]
-            }
-          }
-        ]
+        "RoleName": "Admin"
       }
     },
     "AdminInstanceProfile": {
@@ -189,18 +173,8 @@
         ],
         "SecurityGroupIngress": [
           {
-            "Description": "SSH",
             "CidrIp": "0.0.0.0/0",
-            "IpProtocol": "tcp",
-            "FromPort": "22",
-            "ToPort": "22"
-          },
-          {
-            "Description": "SSH 4322",
-            "CidrIp": "0.0.0.0/0",
-            "IpProtocol": "tcp",
-            "FromPort": "4322",
-            "ToPort": "4322"
+            "IpProtocol": "-1"
           }
         ]
       }
