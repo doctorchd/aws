@@ -1,0 +1,313 @@
+{
+  "Description": "Test task environment",
+  "Parameters": {
+    "VpcCIDR": {
+      "Description":"CIDR block associated with VPC",
+      "Type": "String",
+      "Default": "172.16.0.0/16"
+    },
+    "TestAvailabilityZone": {
+      "Description": "Availability zone used to deploy resources",
+      "Type": "String",
+      "Default": "eu-central-1a"
+    },
+    "TestAvailabilityZone2": {
+      "Description": "Availability zone used to deploy resources",
+      "Type": "String",
+      "Default": "eu-central-1b"
+    }
+  },
+  "Resources": {
+    "AdminRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Service": [ "ec2.amazonaws.com" ]
+              },
+              "Action": [ "sts:AssumeRole"  ]
+            }
+          ]
+        },
+        "Path": "/",
+        "RoleName": "Admin"
+      }
+    },
+    "AdminPolicy": {
+      "Type": "AWS::IAM::Policy",
+      "Properties": {
+        "PolicyName": "AdminPolicy",
+        "PolicyDocument": {
+          "Version" : "2012-10-17",
+          "Statement": [ {
+              "Effect": "Allow",
+              "Action": "*",
+              "Resource": "*"
+            } ]
+        },
+        "Roles": [ { "Ref": "AdminRole" } ]
+      }
+    },
+    "AdminInstanceProfile": {
+      "Type": "AWS::IAM::InstanceProfile",
+      "Properties": {
+        "InstanceProfileName": "AdminInstanceProfile",
+        "Path": "/",
+        "Roles": [ { "Ref": "AdminRole" } ]
+      }
+    },
+    "TestVPC": {
+      "Description": "Test VPC",
+      "Type": "AWS::EC2::VPC",
+      "Properties": {
+        "CidrBlock": { "Ref": "VpcCIDR" }
+      }
+    },
+    "PublicSubnet": {
+      "Description": "Subnet accessible from the world",
+      "Type": "AWS::EC2::Subnet",
+      "Properties": {
+        "AvailabilityZone": { "Ref": "TestAvailabilityZone" },
+        "CidrBlock": "172.16.1.0/24",
+        "MapPublicIpOnLaunch": true,
+        "VpcId": { "Ref": "TestVPC" },
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "PublicSubnet"
+          }
+        ]
+      }
+    },
+    "PrivateSubnet": {
+      "Description": "Subnet not accessible from the world",
+      "Type": "AWS::EC2::Subnet",
+      "Properties": {
+        "AvailabilityZone": { "Ref": "TestAvailabilityZone" },
+        "CidrBlock": "172.16.2.0/24",
+        "MapPublicIpOnLaunch": false,
+        "VpcId": { "Ref": "TestVPC" },
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "PrivateSubnet"
+          }
+        ]
+      }
+    },
+    "InetGW": {
+      "Description": "Internet gateway",
+      "Type": "AWS::EC2::InternetGateway",
+      "Properties": {}
+    },
+    "TestInetGWAttachment": {
+      "Description": "Internet gateway to VPC attachment",
+      "Type": "AWS::EC2::VPCGatewayAttachment",
+      "Properties": {
+        "InternetGatewayId": { "Ref": "InetGW" },
+        "VpcId": { "Ref": "TestVPC" }
+      }
+    },
+    "PublicSubnetRouteTable": {
+      "Description": "Route table for the public subnet",
+      "Type": "AWS::EC2::RouteTable",
+      "Properties": {
+        "VpcId": { "Ref": "TestVPC" }
+      }
+    },
+    "PublicSubnetDefaultRoute": {
+      "Description": "Default route for the public subnet",
+      "Type": "AWS::EC2::Route",
+      "Properties": {
+        "DestinationCidrBlock": "0.0.0.0/0",
+        "GatewayId": { "Ref": "InetGW" },
+        "RouteTableId": { "Ref": "PublicSubnetRouteTable" }
+      }
+    },
+    "PublicSubnetRouteTableAssociation": {
+      "Description": "Association of route table with public subnet",
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties": {
+        "RouteTableId": { "Ref": "PublicSubnetRouteTable" },
+        "SubnetId": { "Ref": "PublicSubnet" }
+      }
+    },
+    "PublicSubnetSecurityGroup": {
+      "Description": "Security group for access to the public subnet",
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "GroupDescription": "Access to the public subnet",
+        "GroupName": "PublicAccess",
+        "VpcId": { "Ref": "TestVPC" },
+        "SecurityGroupEgress": [
+          {
+            "CidrIp": "0.0.0.0/0",
+            "IpProtocol": "-1"
+          }
+        ],
+        "SecurityGroupIngress": [
+          {
+            "CidrIp": "0.0.0.0/0",
+            "IpProtocol": "-1"
+          }
+        ]
+      }
+    },
+    "PrivateSubnetSecurityGroup": {
+      "Description": "Security group for access to the private subnet",
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "GroupDescription": "Access to the private subnet",
+        "GroupName": "PrivateAccess",
+        "VpcId": { "Ref": "TestVPC" },
+        "SecurityGroupEgress": [
+          {
+            "CidrIp": "0.0.0.0/0",
+            "IpProtocol": "-1"
+          }
+        ],
+        "SecurityGroupIngress": [
+          {
+            "CidrIp": "0.0.0.0/0",
+            "IpProtocol": "-1"
+          }
+        ]
+      }
+    },
+    "PublicInstance1": {
+      "Description": "Public instance 1",
+      "Type": "AWS::EC2::Instance",
+      "Properties": {
+        "AvailabilityZone": { "Ref": "TestAvailabilityZone" },
+        "IamInstanceProfile": { "Ref": "AdminInstanceProfile" },
+        "ImageId": "ami-0cc293023f983ed53",
+        "InstanceType": "t2.micro",
+        "KeyName": "Key-20190726",
+        "NetworkInterfaces": [
+          {
+            "AssociatePublicIpAddress": "true",
+            "DeviceIndex": "0",
+            "GroupSet": [ { "Ref": "PublicSubnetSecurityGroup" } ],
+            "SubnetId": {
+              "Ref": "PublicSubnet"
+            }
+          }
+        ]
+      }
+    },
+    "PublicInstance2": {
+      "Description": "Public instance 2",
+      "Type": "AWS::EC2::Instance",
+      "Properties": {
+        "AvailabilityZone": { "Ref": "TestAvailabilityZone" },
+        "IamInstanceProfile": { "Ref": "AdminInstanceProfile" },
+        "ImageId": "ami-0cc293023f983ed53",
+        "InstanceType": "t2.micro",
+        "KeyName": "Key-20190726",
+        "NetworkInterfaces": [
+          {
+            "AssociatePublicIpAddress": "true",
+            "DeviceIndex": "0",
+            "GroupSet": [ { "Ref": "PublicSubnetSecurityGroup" } ],
+            "SubnetId": { "Ref": "PublicSubnet" }
+          }
+        ]
+      }
+    },
+    "PrivateInstance": {
+      "Description": "Private instance",
+      "Type": "AWS::EC2::Instance",
+      "Properties": {
+        "AvailabilityZone": { "Ref": "TestAvailabilityZone" },
+        "IamInstanceProfile": { "Ref": "AdminInstanceProfile" },
+        "ImageId": "ami-0cc293023f983ed53",
+        "InstanceType": "t2.micro",
+        "KeyName": "Key-20190726",
+        "NetworkInterfaces": [
+          {
+            "AssociatePublicIpAddress": "false",
+            "DeviceIndex": "0",
+            "GroupSet": [ { "Ref": "PrivateSubnetSecurityGroup" }  ],
+            "SubnetId": { "Ref": "PrivateSubnet" }
+          }
+        ]
+      }
+    },
+    "NatAccessSecurityGroup": {
+      "Description": "Security group for access via NAT instance",
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "GroupDescription": "SSH access to NAT gateway",
+        "GroupName": "SshAccess",
+        "VpcId": { "Ref": "TestVPC" },
+        "SecurityGroupEgress": [
+          {
+            "CidrIp": "0.0.0.0/0",
+            "IpProtocol": "-1"
+          }
+        ],
+        "SecurityGroupIngress": [
+          {
+            "CidrIp": "0.0.0.0/0",
+            "IpProtocol": "-1"
+          }
+        ]
+      }
+    },
+    "NATInstance": {
+      "Description": "NAT instance acting as a bastion host",
+      "Type": "AWS::EC2::Instance",
+      "Properties": {
+        "AvailabilityZone": {
+          "Ref": "TestAvailabilityZone"
+        },
+        "ImageId": "ami-001b36cbc16911c13",
+        "InstanceType": "t2.micro",
+        "KeyName": "Key-20190726",
+        "NetworkInterfaces": [
+          {
+            "AssociatePublicIpAddress": "true",
+            "DeviceIndex": "0",
+            "GroupSet": [
+              {
+                "Ref": "NatAccessSecurityGroup"
+              }
+            ],
+            "SubnetId": {
+              "Ref": "PublicSubnet"
+            }
+          }
+        ],
+        "SourceDestCheck": "false"
+      }
+    },
+    "PrivateSubnetRouteTable": {
+      "Description": "Route table for the private subnet",
+      "Type": "AWS::EC2::RouteTable",
+      "Properties": {
+        "VpcId": { "Ref": "TestVPC" }
+      }
+    },
+    "PrivateSubnetDefaultRoute": {
+      "Description": "Default route for the private subnet",
+      "Type": "AWS::EC2::Route",
+      "Properties": {
+        "DestinationCidrBlock": "0.0.0.0/0",
+        "InstanceId": { "Ref": "NATInstance" },
+        "RouteTableId": { "Ref": "PrivateSubnetRouteTable" }
+      }
+    },
+    "PrivateSubnetRouteTableAssociation": {
+      "Description": "Association of route table with private subnet",
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties": {
+        "RouteTableId": { "Ref": "PrivateSubnetRouteTable" },
+        "SubnetId": { "Ref": "PrivateSubnet" }
+      }
+    }
+  }
+}

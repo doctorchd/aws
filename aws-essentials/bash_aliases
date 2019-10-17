@@ -1,0 +1,3 @@
+#!/bin/bash
+
+alias   awsssh="ssh -i ~/.ssh/Key-20190726.pem -l ec2-user -o StrictHostKeyChecking=no"
