@@ -179,6 +179,27 @@
         ]
       }
     },
+    "OpenAccessSecurityGroup": {
+      "Description": "Security group for open access",
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "GroupDescription": "Open access",
+        "GroupName": "OpenAccessSecurityGroup",
+        "VpcId": { "Ref": "TestVPC" },
+        "SecurityGroupEgress": [
+          {
+            "CidrIp": "0.0.0.0/0",
+            "IpProtocol": "-1"
+          }
+        ],
+        "SecurityGroupIngress": [
+          {
+            "CidrIp": "0.0.0.0/0",
+            "IpProtocol": "-1"
+          }
+        ]
+      }
+    },
     "PrivateInstanceSecurityGroup": {
       "Description": "Access to private instance",
       "Type": "AWS::EC2::SecurityGroup",
@@ -401,7 +422,8 @@
         "Engine": "postgres",
         "MasterUsername": "rootuser",
         "MasterUserPassword": "rootuser",
-        "Port": "5432"
+        "Port": "5432",
+        "VPCSecurityGroups": [ { "Ref": "OpenAccessSecurityGroup" } ]
       },
       "DeletionPolicy": "Delete"
     }
