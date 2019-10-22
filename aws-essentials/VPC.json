@@ -35,13 +35,27 @@
         "RoleName": "Admin"
       }
     },
+    "AdminPolicy": {
+      "Type": "AWS::IAM::Policy",
+      "Properties": {
+        "PolicyName": "AdminPolicy",
+        "PolicyDocument": {
+          "Version" : "2012-10-17",
+          "Statement": [ {
+            "Effect": "Allow",
+            "Action": "*",
+            "Resource": "*"
+          } ]
+        },
+        "Roles": [ { "Ref": "AdminRole" } ]
+      }
+    },
     "AdminInstanceProfile": {
       "Type": "AWS::IAM::InstanceProfile",
       "Properties": {
+        "InstanceProfileName": "AdminInstanceProfile",
         "Path": "/",
-        "Roles": [ {
-          "Ref": "AdminRole"
-        } ]
+        "Roles": [ { "Ref": "AdminRole" } ]
       }
     },
     "TestVPC": {

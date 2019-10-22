@@ -344,7 +344,7 @@
           "HealthyThreshold": "2",
           "Interval": "5",
           "Target": "TCP:80",
-          "Timeout": "3",
+          "Timeout": "",
           "UnhealthyThreshold": "10"
         },
         "Instances": [

@@ -1,0 +1,63 @@
+{
+  "Description": "Test task environment",
+  "Parameters": {
+    "VpcCIDR": {
+      "Description":"CIDR block associated with VPC",
+      "Type": "String",
+      "Default": "172.16.0.0/16"
+    },
+    "TestAvailabilityZone": {
+      "Description": "Availability zone used to deploy resources",
+      "Type": "String",
+      "Default": "eu-central-1a"
+    },
+    "TestAvailabilityZone2": {
+      "Description": "Availability zone used to deploy resources",
+      "Type": "String",
+      "Default": "eu-central-1b"
+    }
+  },
+  "Resources": {
+    "AdminRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": { "Service": [ "ec2.amazonaws.com" ] },
+              "Action": [ "sts:AssumeRole"  ]
+            }
+          ]
+        },
+        "Path": "/",
+        "RoleName": "Admin",
+
+      }
+    },
+    "AdminPolicy": {
+      "Type": "AWS::IAM::Policy",
+      "Properties": {
+        "PolicyName": "AdminPolicy",
+        "PolicyDocument": {
+          "Version" : "2012-10-17",
+          "Statement": [ {
+            "Effect": "Allow",
+            "Action": "*",
+            "Resource": "*"
+          } ]
+        },
+        "Roles": [ { "Ref": "AdminRole" } ]
+      }
+    },
+    "AdminInstanceProfile": {
+      "Type": "AWS::IAM::InstanceProfile",
+      "Properties": {
+        "InstanceProfileName": "AdminInstanceProfile",
+        "Path": "/",
+        "Roles": [ { "Ref": "AdminRole" } ]
+      }
+    }
+  }
+}
