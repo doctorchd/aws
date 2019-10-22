@@ -1,0 +1,36 @@
+{
+  "Parameters": {},
+  "Resources": {
+    "LohikaLoadBalancer": {
+      "Description": "Test HTTP load balancer",
+      "Type": "AWS::ElasticLoadBalancing::LoadBalancer",
+      "Properties": {
+        "HealthCheck": {
+          "HealthyThreshold": "2",
+          "Interval": "5",
+          "Target": "TCP:80",
+          "Timeout": "",
+          "UnhealthyThreshold": "10"
+        },
+        "Instances": [
+          { "Ref": "PublicInstance1" },
+          { "Ref": "PublicInstance2" }
+        ],
+        "Listeners": [
+          {
+            "InstancePort": "80",
+            "LoadBalancerPort": "80",
+            "Protocol": "HTTP"
+          }
+        ],
+        "Scheme": "internet-facing",
+        "SecurityGroups": [
+          { "Ref": "PublicSubnetSecurityGroup" }
+        ],
+        "Subnets": [
+          { "Ref": "PublicSubnet" }
+        ]
+      }
+    }
+  }
+}

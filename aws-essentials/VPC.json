@@ -440,6 +440,30 @@
         "VPCSecurityGroups": [ { "Ref": "OpenAccessSecurityGroup" } ]
       },
       "DeletionPolicy": "Delete"
+    },
+    "LohikaLoadBalancer": {
+      "Description": "Test HTTP load balancer",
+      "Type": "AWS::ElasticLoadBalancing::LoadBalancer",
+      "Properties": {
+        "Instances": [
+          { "Ref": "PublicInstance1" },
+          { "Ref": "PublicInstance2" }
+        ],
+        "Listeners": [
+          {
+            "InstancePort": "80",
+            "LoadBalancerPort": "80",
+            "Protocol": "HTTP"
+          }
+        ],
+        "Scheme": "internet-facing",
+        "SecurityGroups": [
+          { "Ref": "PublicSubnetSecurityGroup" }
+        ],
+        "Subnets": [
+          { "Ref": "PublicSubnet" }
+        ]
+      }
     }
   }
 }
