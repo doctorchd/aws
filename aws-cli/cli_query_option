@@ -1,6 +1,7 @@
 # https://jmespath.org/
 # https://jmespath.org/tutorial.html
 # https://jmespath.org/examples.html
+# https://docs.aws.amazon.com/cli/latest/userguide/cli-usage-filter.html
 
 aws ec2 describe-transit-gateways \
         --region us-west-1 \
