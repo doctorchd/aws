@@ -1,0 +1,6 @@
+aws ec2 describe-transit-gateways \
+        --region us-west-1 \
+        --query "TransitGateways[?State=='available' \
+            && Tags[?Key=='Name' && Value=='UsWest1TransitGateway']] \
+            | [0].TransitGatewayId"
+
