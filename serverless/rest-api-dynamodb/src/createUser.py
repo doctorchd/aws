@@ -22,7 +22,6 @@ def createUser(event, context):
 
     body = {
         "message": "User created!",
-        # "input": event
     }
 
     response = {
