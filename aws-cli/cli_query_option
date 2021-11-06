@@ -9,3 +9,13 @@ aws ec2 describe-transit-gateways \
             && Tags[?Key=='Name' && Value=='UsWest1TransitGateway']] \
             | [0].TransitGatewayId"
 
+
+% aws ec2 describe-addresses --query "Addresses[].[PublicIp, AllocationId, AssociationId]"
+[
+    [
+        "3.101.48.150",
+        "eipalloc-0415c6ef566b60b68",
+        "eipassoc-0937fbc45b2f9cde1"
+    ]
+]
+
